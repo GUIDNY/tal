@@ -22,8 +22,21 @@ export default function BookingFlow({ isOpen, onClose }: BookingFlowProps) {
   const [step, setStep] = useState(1);
   const [data, setData] = useState<BookingData>(emptyBooking);
   const [submitted, setSubmitted] = useState(false);
+  const [busyDates, setBusyDates] = useState<Record<string, "hold" | "booked">>({});
   const dialogRef = useRef<HTMLDivElement>(null);
+  const honeypotRef = useRef<HTMLInputElement>(null);
   const titleId = useId();
+
+  useEffect(() => {
+    if (!isOpen) return;
+    fetch("/api/availability")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { dates: Array<{ date: string; status: "hold" | "booked" }> } | null) => {
+        if (!data) return;
+        setBusyDates(Object.fromEntries(data.dates.map((d) => [d.date, d.status])));
+      })
+      .catch(() => {});
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -81,8 +94,17 @@ export default function BookingFlow({ isOpen, onClose }: BookingFlowProps) {
   function handleSubmit() {
     setSubmitted(true);
     trackEvent("booking_completed", { eventType: data.eventType, serviceType: data.serviceType });
+
+    // Open WhatsApp synchronously within the click handler so popup blockers don't kill it.
     const url = buildBookingWhatsAppUrl(data);
     window.open(url, "_blank", "noopener,noreferrer");
+
+    // Persist the lead in the background — doesn't block the WhatsApp handoff above.
+    fetch("/api/bookings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...data, website: honeypotRef.current?.value ?? "" }),
+    }).catch(() => {});
   }
 
   const canAdvance = (() => {
@@ -164,8 +186,18 @@ export default function BookingFlow({ isOpen, onClose }: BookingFlowProps) {
               {submitted ? (
                 <BookingSuccess onClose={onClose} />
               ) : (
-                <StepContent step={step} data={data} setData={setData} />
+                <StepContent step={step} data={data} setData={setData} busyDates={busyDates} />
               )}
+              {/* Honeypot — hidden from real visitors, bots often fill every field */}
+              <input
+                ref={honeypotRef}
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                className="absolute -left-[9999px] h-0 w-0 opacity-0"
+              />
             </div>
 
             {!submitted && (
@@ -266,10 +298,12 @@ function StepContent({
   step,
   data,
   setData,
+  busyDates,
 }: {
   step: number;
   data: BookingData;
   setData: React.Dispatch<React.SetStateAction<BookingData>>;
+  busyDates: Record<string, "hold" | "booked">;
 }) {
   const inputClass =
     "w-full rounded-xl border border-charcoal-line bg-ink px-4 py-3 text-paper placeholder:text-paper-dim/60 outline-none transition focus:border-champagne";
@@ -285,7 +319,8 @@ function StepContent({
           />
         </StepShell>
       );
-    case 2:
+    case 2: {
+      const busyStatus = data.eventDate ? busyDates[data.eventDate] : undefined;
       return (
         <StepShell title="מתי האירוע?" subtitle="אם עוד לא סגור — אפשר להשאיר ריק ולהמשיך.">
           <input
@@ -295,8 +330,16 @@ function StepContent({
             className={inputClass}
             aria-label="תאריך האירוע"
           />
+          {busyStatus && (
+            <p className="rounded-xl border border-ember/30 bg-ember/10 px-4 py-3 text-sm text-ember">
+              {busyStatus === "booked"
+                ? "התאריך הזה כבר סגור אצל טל — עדיין שווה לשלוח פנייה, לפעמים משהו משתחרר."
+                : "יש כבר עניין בתאריך הזה — שלחו פנייה ונבדוק ביחד מה אפשרי."}
+            </p>
+          )}
         </StepShell>
       );
+    }
     case 3:
       return (
         <StepShell title="איפה זה קורה?">

@@ -2,10 +2,6 @@ import type { Metadata } from "next";
 import { Heebo } from "next/font/google";
 import "./globals.css";
 import { siteConfig } from "@/lib/site-config";
-import BookingProvider from "@/components/BookingProvider";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import StickyMobileCTA from "@/components/StickyMobileCTA";
 
 const heebo = Heebo({
   variable: "--font-heebo",
@@ -86,12 +82,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceJsonLd) }}
         />
-        <BookingProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <StickyMobileCTA />
-        </BookingProvider>
+        {children}
       </body>
     </html>
   );

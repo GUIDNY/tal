@@ -37,8 +37,8 @@ export default function Showreel() {
           className="group relative block aspect-video w-full overflow-hidden rounded-3xl border border-charcoal-line"
         >
           <Image
-            src="/tal/portraits/night-birdman-neon-sax.jpg"
-            alt="טל ראופמן בלילה עם סקסופון, תאורת ניאון"
+            src="/tal/video/showreel-poster.jpg"
+            alt="טל ראופמן מנגן בסקסופון בתוך מעגל אורחים באירוע"
             fill
             sizes="100vw"
             className="object-cover transition duration-700 group-hover:scale-105"
@@ -63,7 +63,7 @@ export default function Showreel() {
         isOpen={open}
         onClose={() => setOpen(false)}
         src="/tal/video/showreel.mp4"
-        poster="/tal/portraits/night-birdman-neon-sax.jpg"
+        poster="/tal/video/showreel-poster.jpg"
         title="Showreel — טל ראופמן"
       />
     </section>

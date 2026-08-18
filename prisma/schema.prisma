@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum BookingStatus {
+  new
+  contacted
+  qualified
+  booked
+  lost
+}
+
+enum DateStatus {
+  available
+  hold
+  booked
+}
+
+model BookingRequest {
+  id          String        @id @default(uuid())
+  createdAt   DateTime      @default(now())
+  fullName    String
+  phone       String
+  email       String?
+  eventType   String
+  eventDate   DateTime?     @db.Date
+  venue       String?
+  city        String
+  guestCount  String
+  serviceType String
+  message     String?
+  source      String        @default("website")
+  status      BookingStatus @default(new)
+
+  @@index([status])
+  @@index([eventDate])
+}
+
+model AvailabilityDate {
+  id        String     @id @default(uuid())
+  date      DateTime   @unique @db.Date
+  status    DateStatus
+  note      String?
+  updatedAt DateTime   @updatedAt
+}
+

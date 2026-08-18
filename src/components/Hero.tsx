@@ -35,11 +35,11 @@ export default function Hero() {
           onCanPlay={() => setVideoReady(true)}
           onError={() => setVideoReady(false)}
         >
-          <source src="/tal/video/hero-1080.webm" type="video/webm" />
-          <source src="/tal/video/hero-1080.mp4" type="video/mp4" />
+          <source src="/tal/video/hero-720.mp4" type="video/mp4" />
         </video>
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-ink/10" />
         <div className="absolute inset-0 bg-gradient-to-l from-ink/70 via-transparent to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-ink/70 to-transparent" />
       </div>
 
       <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pb-10 pt-28 sm:px-8 sm:pb-32 sm:pt-40">
