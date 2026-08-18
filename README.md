@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# טל ראופמן — DJ & Saxophone
 
-## Getting Started
+Next.js 16 + Tailwind v4 site for Tal Raufman.
 
-First, run the development server:
+## Run locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Before launch — replace placeholders
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Everything below lives in [`src/lib/site-config.ts`](src/lib/site-config.ts) and is
+marked `TODO` there:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Real WhatsApp number, phone, and email
+- Real Instagram handle (TikTok/YouTube optional — leave blank to hide the link)
+- Production domain (`siteConfig.url`, used for SEO/OG/sitemap)
 
-## Learn More
+## Media
 
-To learn more about Next.js, take a look at the following resources:
+- `public/tal/portraits/` — the 6 real photos of Tal, resized and renamed descriptively.
+- `public/tal/video/` — **empty**. The hero and showreel sections reference
+  `hero-1080.mp4` / `hero-1080.webm` / `showreel.mp4` here; until those exist the
+  site gracefully falls back to a static photo (no broken UI). The only video
+  supplied (`~/Desktop/טל/IMG_3566.MOV`, 108MB, vertical phone footage) is too
+  large to serve or commit as-is — compress and crop it to a 16:9 (or blurred
+  16:9-padded) MP4 + WebM pair under ~15MB and drop them in this folder.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Booking flow
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+There's no database connected yet (by design, for now). The multi-step
+"בדיקת זמינות" flow collects the lead client-side and opens WhatsApp with a
+prefilled message — nothing is stored server-side. To add persistence later:
+create a Supabase project, add a `booking_requests` table, and wire a
+`POST /api/bookings` route + RLS policies before adding an admin dashboard at
+`/admin` (not built yet — would have nothing to show without a database).
 
-## Deploy on Vercel
+## Testimonials
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`src/components/Testimonials.tsx` renders nothing until real testimonials are
+added to its `testimonials` array — no placeholder quotes were fabricated.
