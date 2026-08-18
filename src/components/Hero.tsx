@@ -1,12 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import { motion } from "motion/react";
 import { useBooking } from "./BookingProvider";
 
 export default function Hero() {
-  const [videoReady, setVideoReady] = useState(false);
   const { openBooking } = useBooking();
 
   return (
@@ -18,25 +16,8 @@ export default function Hero() {
           fill
           priority
           sizes="100vw"
-          className={`object-cover object-[65%_20%] transition-opacity duration-700 ${
-            videoReady ? "opacity-0" : "opacity-100"
-          }`}
+          className="object-cover object-[65%_20%]"
         />
-        <video
-          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
-            videoReady ? "opacity-100" : "opacity-0"
-          }`}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="none"
-          poster="/tal/portraits/street-joy-arms-out-sax.jpg"
-          onCanPlay={() => setVideoReady(true)}
-          onError={() => setVideoReady(false)}
-        >
-          <source src="/tal/video/hero-720.mp4" type="video/mp4" />
-        </video>
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-ink/10" />
         <div className="absolute inset-0 bg-gradient-to-l from-ink/70 via-transparent to-transparent" />
         <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-ink/70 to-transparent" />
