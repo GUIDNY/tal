@@ -37,7 +37,7 @@ export default function About() {
             transition={{ duration: 0.6 }}
             className="mb-3 text-sm font-semibold tracking-[0.3em] text-champagne uppercase"
           >
-            Tal Raufman
+            Raufman
           </motion.p>
 
           <motion.h2
