@@ -128,6 +128,19 @@ already requested by `tsdav`'s default `fetchCalendars` props) — the calendar
 dot and the "📱 מהאייפון" badge use that real color instead of a flat
 placeholder.
 
+**Auto-classified into the CRM by title**, per Tal's own naming habit: on
+first import, `classifyIcloudStatus()` in `src/lib/icloud-sync.ts` checks
+whether the title (as typed on the phone) starts with the word `ליד` — if so
+the Event is created with `status: "lead"`, otherwise `status: "confirmed"`
+(a real booked gig). This only runs once, at creation — re-syncing never
+touches `status` again, so a status change made from the CRM afterward (e.g.
+marking it `completed` once the gig happens) survives future syncs. The CRM
+tab's `pipeline=1` query was widened to include these customer-less
+`source: "icloud"` rows alongside real customer leads (still excluding plain
+manual date-blocks like "לא זמין — חופשה"), and `EventFormModal` shows the
+full deal/follow-up fields for them too — a `source: "icloud"` lead isn't a
+personal block just because it has no linked `Customer` yet.
+
 This is manual ("sync now" button), not automatic — add a Vercel Cron Job
 hitting the same endpoint on a schedule if you want it to run itself. A full
 sync currently takes ~20-30s (sequential CalDAV round-trips per calendar),

@@ -134,7 +134,10 @@ export default function LeadsTable() {
                   className="cursor-pointer border-b border-charcoal-line bg-ink-soft transition last:border-0 hover:bg-charcoal"
                 >
                   <td className="px-4 py-3">
-                    <p className="font-medium text-paper">{ev.customer?.fullName ?? "—"}</p>
+                    <p className="font-medium text-paper">
+                      {ev.customer?.fullName ?? ev.title ?? "—"}
+                      {ev.source === "icloud" && <span className="mr-1.5 align-middle text-xs">📱</span>}
+                    </p>
                     <p className="text-xs text-paper-dim" dir="ltr">
                       {ev.customer?.phone}
                     </p>

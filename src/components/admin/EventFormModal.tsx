@@ -57,6 +57,10 @@ export default function EventFormModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // A customer-less iCloud-synced entry is a real lead (identified by its title), not a personal
+  // date block — it still needs the full deal/follow-up fields even though mode defaults to "block".
+  const showLeadFields = mode !== "block" || editingEvent?.source === "icloud";
+
   useEffect(() => {
     fetch("/api/admin/customers")
       .then((res) => res.json())
@@ -227,7 +231,7 @@ export default function EventFormModal({
             </div>
           </div>
 
-          {mode !== "block" && (
+          {showLeadFields && (
             <div className="grid grid-cols-2 gap-3">
               <input
                 type="text"
@@ -246,7 +250,7 @@ export default function EventFormModal({
             </div>
           )}
 
-          {mode !== "block" && (
+          {showLeadFields && (
             <input
               type="text"
               placeholder="מקום / אולם"
@@ -264,7 +268,7 @@ export default function EventFormModal({
             className={inputClass}
           />
 
-          {mode !== "block" && (
+          {showLeadFields && (
             <>
               <div className="border-t border-charcoal-line pt-4">
                 <p className="mb-3 text-xs font-semibold text-paper-dim">פרטי עסקה</p>

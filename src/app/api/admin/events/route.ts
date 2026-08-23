@@ -21,7 +21,10 @@ export async function GET(request: Request) {
 
   const events = await prisma.event.findMany({
     where: {
-      customerId: customerId ?? (pipeline ? { not: null } : undefined),
+      customerId: customerId ?? undefined,
+      // Pipeline view: real leads/customers, plus iCloud-synced events (Tal's own titled
+      // leads/gigs, recognized from the phone) — but not customer-less manual date blocks.
+      ...(pipeline && !customerId ? { OR: [{ customerId: { not: null } }, { source: "icloud" }] } : {}),
       eventDate:
         from && to
           ? { gte: new Date(from), lte: new Date(to) }

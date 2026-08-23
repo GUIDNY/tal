@@ -3,6 +3,15 @@ import { sync as icalSync, expandRecurringEvent } from "node-ical";
 import type { CalendarResponse } from "node-ical";
 import { prisma } from "./db";
 import { toDateKey } from "./calendar";
+import type { EventStatus } from "@/generated/prisma/client";
+
+/** Titles starting with this word (as typed on the phone) are a lead, not a booked event. */
+const LEAD_PREFIX = "ליד";
+
+/** Classifies a synced event by its title so it lands in the right CRM bucket on first import. */
+function classifyIcloudStatus(title: string): EventStatus {
+  return title.trim().startsWith(LEAD_PREFIX) ? "lead" : "confirmed";
+}
 
 export interface SyncResult {
   imported: number;
@@ -119,7 +128,9 @@ export async function syncFromICloud(): Promise<SyncResult> {
         externalId,
         title: item.title,
         eventDate: new Date(item.eventDate),
-        status: "confirmed",
+        // Classified once, on first import, from the title's opening word — later status changes
+        // made from the CRM (e.g. marking it completed/cancelled) are left alone on re-sync.
+        status: classifyIcloudStatus(item.title),
         source: "icloud",
         color: item.color,
       },
