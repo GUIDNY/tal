@@ -67,6 +67,9 @@ export default function Footer() {
             <Link href="/accessibility" className="hover:text-champagne">
               הצהרת נגישות
             </Link>
+            <Link href="/admin" className="hover:text-champagne">
+              אזור ניהול
+            </Link>
           </div>
         </div>
       </div>
