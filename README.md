@@ -65,6 +65,21 @@ marked `TODO` there:
 To change the admin password: `vercel env rm ADMIN_PASSWORD production` then
 `vercel env add ADMIN_PASSWORD production`.
 
+### iPhone calendar subscription
+
+The "📅 חיבור היומן לאייפון" panel at the top of the Calendar tab shows a personal
+`webcal://` link (backed by `GET /api/calendar/[token]`, token-authenticated since
+a real calendar-subscription client can't send a login cookie). Subscribing to it
+mirrors every non-cancelled Event with a date into the iPhone Calendar app,
+read-only, refreshed automatically by iOS — one direction only, CRM → iPhone.
+Pulling personal iPhone/iCloud events back into the CRM would need iCloud CalDAV
+credentials (an Apple app-specific password) and is a separate, heavier feature —
+not built, ask if you want it.
+
+The feed token lives in `CALENDAR_FEED_TOKEN`; rotate it the same way as
+`ADMIN_PASSWORD` above if it ever leaks (anyone with the link can read the
+calendar, so don't post it anywhere public).
+
 ## Testimonials
 
 `src/components/Testimonials.tsx` renders nothing until real testimonials are

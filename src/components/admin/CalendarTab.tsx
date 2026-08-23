@@ -5,6 +5,7 @@ import type { EventRecord } from "@/types/crm";
 import { EVENT_STATUS_COLORS, EVENT_STATUS_DOT, EVENT_STATUS_LABELS } from "@/types/crm";
 import { getMonthGrid, toDateKey, HEBREW_MONTH_NAMES, HEBREW_WEEKDAY_SHORT } from "@/lib/calendar";
 import EventFormModal from "./EventFormModal";
+import CalendarFeedLink from "./CalendarFeedLink";
 
 export default function CalendarTab() {
   const [cursor, setCursor] = useState(() => {
@@ -50,6 +51,8 @@ export default function CalendarTab() {
 
   return (
     <div className="flex flex-col gap-5">
+      <CalendarFeedLink />
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button
