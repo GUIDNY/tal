@@ -21,7 +21,9 @@ export async function GET(request: Request, ctx: RouteContext<"/api/calendar/[to
   }
 
   const events = await prisma.event.findMany({
-    where: { eventDate: { not: null }, status: { not: "cancelled" } },
+    // Events with source "icloud" were pulled FROM Tal's phone in the first place — sending
+    // them back out through this feed would show every one of them twice on his calendar.
+    where: { eventDate: { not: null }, status: { not: "cancelled" }, source: { not: "icloud" } },
     include: { customer: { select: { fullName: true, phone: true } } },
     orderBy: { eventDate: "asc" },
   });

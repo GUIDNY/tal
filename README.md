@@ -53,28 +53,39 @@ marked `TODO` there:
   were generated and pushed to Vercel (Production + Development) when this was
   built — check the Vercel dashboard's Environment Variables page for the
   current values, or generate new ones and update them there.
+- **CRM tab** (default landing tab): the sales pipeline — every lead/event with a
+  customer, as a sortable table, not just a per-customer history. Each row carries
+  deal fields (`price`, `vatAmount`, `commissionPercent`, `closingProbability`,
+  `closedBy`) and follow-up fields (`nextFollowUpDate`, `contactedBy`, `callNotes`,
+  `lastContactedAt`, stamped by a "✓ סמן שדיברנו עכשיו" button). Filter chips bucket
+  rows by `getFollowUpUrgency()` in `src/types/crm.ts` — overdue / קרוב לשיחה (due
+  within 3 days) / רחוק לשיחה / כבר דיברנו / ללא מעקב — computed client-side from
+  the two date fields, not stored as a separate status.
 - **יומן (Calendar) tab**: month grid, click a day to see/add events. Adding an
   event lets you pick an existing customer, quick-create a new one, or just block
   the date with a title (no customer) — e.g. a personal day off. Event status
   (`lead` / `tentative` / `confirmed` / `completed` / `cancelled`) drives both the
   colored dot on the calendar and the public availability warning.
-- **לקוחות (Customers) tab**: searchable customer list; click one to see contact
-  info, editable notes, and their full event history. Customers are also created
-  automatically from website inquiries (deduped by phone number).
+- **לקוחות (Customers) tab**: searchable customer directory; click one to see
+  contact info, editable notes, and their full event history. Customers are also
+  created automatically from website inquiries (deduped by phone number).
 
 To change the admin password: `vercel env rm ADMIN_PASSWORD production` then
 `vercel env add ADMIN_PASSWORD production`.
 
-### iPhone calendar subscription
+### iPhone ↔ CRM calendar sync
 
-The "📅 חיבור היומן לאייפון" panel at the top of the Calendar tab shows a personal
-`webcal://` link (backed by `GET /api/calendar/[token]`, token-authenticated since
-a real calendar-subscription client can't send a login cookie). Subscribing to it
-mirrors every non-cancelled Event with a date into the iPhone Calendar app,
-read-only, refreshed automatically by iOS — one direction only, CRM → iPhone.
-Pulling personal iPhone/iCloud events back into the CRM would need iCloud CalDAV
-credentials (an Apple app-specific password) and is a separate, heavier feature —
-not built, ask if you want it.
+Both directions exist and are both live against Tal's real iCloud account:
+
+- **CRM → iPhone**: the "📅 חיבור היומן לאייפון" panel at the top of the Calendar
+  tab shows a personal `webcal://` link (backed by `GET /api/calendar/[token]`,
+  token-authenticated since a real calendar-subscription client can't send a
+  login cookie). Subscribing mirrors CRM events into the iPhone Calendar app,
+  read-only, refreshed automatically by iOS. **Deliberately excludes
+  `source: "icloud"` events** — those were pulled *from* the phone in the first
+  place, so re-exporting them would show every one of them twice on Tal's
+  calendar. Only CRM-native events (website leads, manually added ones) go out.
+- **iPhone → CRM**: see the "iPhone → CRM sync" section below.
 
 The feed token lives in `CALENDAR_FEED_TOKEN`; rotate it the same way as
 `ADMIN_PASSWORD` above if it ever leaks (anyone with the link can read the

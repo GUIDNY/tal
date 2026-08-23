@@ -48,7 +48,21 @@ model Event {
   externalId  String?     @unique // iCloud calendar UID (+ date, for multi-day events), used to dedupe on re-sync
   color       String?     // hex color of the source iCloud calendar, for icloud-sourced events
 
+  // Deal / pipeline tracking
+  price              Int? // total deal value, ₪
+  vatAmount          Int? // מע"מ, ₪
+  commissionPercent  Float? // אחוז עמלה
+  closingProbability Int? // 0-100, כמה קרובים לסגירה
+  closedBy           String? // מי סגר את העסקה
+
+  // Follow-up / call tracking
+  nextFollowUpDate DateTime? @db.Date // מתי השיחה/המעקב הבא
+  lastContactedAt  DateTime? // מתי דיברנו לאחרונה
+  contactedBy      String? // מי דיבר עם הליד
+  callNotes        String? // סיכום שיחה
+
   @@index([status])
   @@index([eventDate])
   @@index([customerId])
+  @@index([nextFollowUpDate])
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { normalizePhone } from "@/lib/phone";
 import { EventStatus } from "@/generated/prisma/client";
+import { parsePipelineFields } from "@/lib/event-fields";
 
 export const dynamic = "force-dynamic";
 
@@ -16,10 +17,11 @@ export async function GET(request: Request) {
   const from = searchParams.get("from");
   const to = searchParams.get("to");
   const customerId = searchParams.get("customerId");
+  const pipeline = searchParams.get("pipeline");
 
   const events = await prisma.event.findMany({
     where: {
-      customerId: customerId ?? undefined,
+      customerId: customerId ?? (pipeline ? { not: null } : undefined),
       eventDate:
         from && to
           ? { gte: new Date(from), lte: new Date(to) }
@@ -28,7 +30,9 @@ export async function GET(request: Request) {
             : undefined,
     },
     include: { customer: { select: { id: true, fullName: true, phone: true } } },
-    orderBy: [{ eventDate: "asc" }, { createdAt: "desc" }],
+    orderBy: pipeline
+      ? [{ nextFollowUpDate: "asc" }, { createdAt: "desc" }]
+      : [{ eventDate: "asc" }, { createdAt: "desc" }],
   });
 
   return NextResponse.json({ events });
@@ -85,6 +89,7 @@ export async function POST(request: Request) {
         message: isNonEmptyString(body.message) ? body.message.trim() : null,
         status: status as EventStatus,
         source: "manual",
+        ...parsePipelineFields(body),
       },
       include: { customer: { select: { id: true, fullName: true, phone: true } } },
     });

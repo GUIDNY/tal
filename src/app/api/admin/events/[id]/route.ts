@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { EventStatus } from "@/generated/prisma/client";
+import { parsePipelineFields } from "@/lib/event-fields";
 
 const VALID_STATUSES = new Set<string>(Object.values(EventStatus));
 
@@ -33,6 +34,7 @@ export async function PATCH(request: Request, ctx: RouteContext<"/api/admin/even
   if ("guestCount" in body) data.guestCount = isNonEmptyString(body.guestCount) ? body.guestCount : null;
   if ("serviceType" in body) data.serviceType = isNonEmptyString(body.serviceType) ? body.serviceType : null;
   if ("message" in body) data.message = isNonEmptyString(body.message) ? body.message.trim() : null;
+  Object.assign(data, parsePipelineFields(body));
 
   try {
     const event = await prisma.event.update({

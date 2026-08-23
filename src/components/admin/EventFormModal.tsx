@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { cloneElement, useEffect, useId, useState } from "react";
 import type { CustomerRecord, EventRecord, EventStatus } from "@/types/crm";
 import { EVENT_STATUS_LABELS } from "@/types/crm";
 
@@ -42,6 +42,18 @@ export default function EventFormModal({
   const [city, setCity] = useState(editingEvent?.city ?? "");
   const [status, setStatus] = useState<EventStatus>(editingEvent?.status ?? "tentative");
   const [message, setMessage] = useState(editingEvent?.message ?? "");
+
+  const [price, setPrice] = useState(editingEvent?.price?.toString() ?? "");
+  const [vatAmount, setVatAmount] = useState(editingEvent?.vatAmount?.toString() ?? "");
+  const [commissionPercent, setCommissionPercent] = useState(editingEvent?.commissionPercent?.toString() ?? "");
+  const [closingProbability, setClosingProbability] = useState(editingEvent?.closingProbability?.toString() ?? "");
+  const [closedBy, setClosedBy] = useState(editingEvent?.closedBy ?? "");
+
+  const [nextFollowUpDate, setNextFollowUpDate] = useState(editingEvent?.nextFollowUpDate?.slice(0, 10) ?? "");
+  const [contactedBy, setContactedBy] = useState(editingEvent?.contactedBy ?? "");
+  const [callNotes, setCallNotes] = useState(editingEvent?.callNotes ?? "");
+  const [lastContactedAt, setLastContactedAt] = useState(editingEvent?.lastContactedAt ?? null);
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -79,6 +91,15 @@ export default function EventFormModal({
       city: city || undefined,
       status,
       message: message || undefined,
+      price: price === "" ? null : Number(price),
+      vatAmount: vatAmount === "" ? null : Number(vatAmount),
+      commissionPercent: commissionPercent === "" ? null : Number(commissionPercent),
+      closingProbability: closingProbability === "" ? null : Number(closingProbability),
+      closedBy: closedBy || null,
+      nextFollowUpDate: nextFollowUpDate || null,
+      contactedBy: contactedBy || null,
+      callNotes: callNotes || null,
+      lastContactedAt,
     };
 
     const res = editingEvent
@@ -232,6 +253,110 @@ export default function EventFormModal({
             className={inputClass}
           />
 
+          {mode !== "block" && (
+            <>
+              <div className="border-t border-charcoal-line pt-4">
+                <p className="mb-3 text-xs font-semibold text-paper-dim">פרטי עסקה</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="מחיר (₪)">
+                    <input
+                      type="number"
+                      min="0"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      className={inputClass}
+                    />
+                  </Field>
+                  <Field label="מע״מ (₪)">
+                    <input
+                      type="number"
+                      min="0"
+                      value={vatAmount}
+                      onChange={(e) => setVatAmount(e.target.value)}
+                      className={inputClass}
+                    />
+                  </Field>
+                  <Field label="אחוז עמלה">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={commissionPercent}
+                      onChange={(e) => setCommissionPercent(e.target.value)}
+                      className={inputClass}
+                    />
+                  </Field>
+                  <Field label="% קרוב לסגירה">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={closingProbability}
+                      onChange={(e) => setClosingProbability(e.target.value)}
+                      className={inputClass}
+                    />
+                  </Field>
+                </div>
+                <div className="mt-3">
+                  <Field label="מי סגר">
+                    <input
+                      type="text"
+                      value={closedBy}
+                      onChange={(e) => setClosedBy(e.target.value)}
+                      className={inputClass}
+                    />
+                  </Field>
+                </div>
+              </div>
+
+              <div className="border-t border-charcoal-line pt-4">
+                <p className="mb-3 text-xs font-semibold text-paper-dim">מעקב ושיחות</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="מעקב הבא">
+                    <input
+                      type="date"
+                      value={nextFollowUpDate}
+                      onChange={(e) => setNextFollowUpDate(e.target.value)}
+                      className={inputClass}
+                    />
+                  </Field>
+                  <Field label="מי דיבר">
+                    <input
+                      type="text"
+                      value={contactedBy}
+                      onChange={(e) => setContactedBy(e.target.value)}
+                      className={inputClass}
+                    />
+                  </Field>
+                </div>
+                <div className="mt-3">
+                  <Field label="סיכום שיחה">
+                    <textarea
+                      value={callNotes}
+                      onChange={(e) => setCallNotes(e.target.value)}
+                      rows={2}
+                      className={inputClass}
+                    />
+                  </Field>
+                </div>
+                <div className="mt-3 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setLastContactedAt(new Date().toISOString())}
+                    className="rounded-full border border-charcoal-line px-4 py-2 text-xs text-paper transition hover:border-champagne hover:text-champagne"
+                  >
+                    ✓ סמן שדיברנו עכשיו
+                  </button>
+                  {lastContactedAt && (
+                    <span className="text-xs text-paper-dim">
+                      נוצר קשר לאחרונה: {new Date(lastContactedAt).toLocaleDateString("he-IL")}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
           {error && <p className="text-sm text-red-400">{error}</p>}
 
           <div className="flex justify-end gap-3 pt-2">
@@ -252,6 +377,24 @@ export default function EventFormModal({
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactElement<{ id?: string }>;
+}) {
+  const id = useId();
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="text-xs text-paper-dim">
+        {label}
+      </label>
+      {cloneElement(children, { id })}
     </div>
   );
 }
