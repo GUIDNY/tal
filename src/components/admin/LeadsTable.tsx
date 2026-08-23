@@ -65,7 +65,7 @@ export default function LeadsTable() {
             <button
               key={s}
               onClick={() => setStage(s)}
-              className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition ${
+              className={`rounded-full border px-3.5 py-2 text-xs font-medium transition sm:py-1.5 ${
                 stage === s
                   ? "border-champagne bg-champagne/10 text-champagne"
                   : "border-charcoal-line text-paper-dim hover:text-paper"
@@ -77,7 +77,7 @@ export default function LeadsTable() {
           <select
             value={owner}
             onChange={(e) => setOwner(e.target.value as typeof owner)}
-            className="rounded-full border border-charcoal-line bg-ink px-3.5 py-1.5 text-xs font-medium text-paper-dim outline-none focus:border-champagne"
+            className="rounded-full border border-charcoal-line bg-ink px-3.5 py-2 text-xs font-medium text-paper-dim outline-none focus:border-champagne sm:py-1.5"
           >
             <option value="all">כולם</option>
             {TEAM_MEMBERS.map((m) => (
@@ -111,60 +111,123 @@ export default function LeadsTable() {
           אין לידים להצגה.
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-charcoal-line">
-          <table className="w-full min-w-[900px] text-right text-sm">
-            <thead>
-              <tr className="border-b border-charcoal-line bg-ink-soft text-xs text-paper-dim">
-                <th className="px-4 py-3 font-medium">לקוח</th>
-                <th className="px-4 py-3 font-medium">אירוע</th>
-                <th className="px-4 py-3 font-medium">תאריך</th>
-                <th className="px-4 py-3 font-medium">סטטוס</th>
-                <th className="px-4 py-3 font-medium">מחיר</th>
-                <th className="px-4 py-3 font-medium">% סגירה</th>
-                <th className="px-4 py-3 font-medium">מעקב הבא</th>
-                <th className="px-4 py-3 font-medium">מי דיבר</th>
-                <th className="px-4 py-3 font-medium">סיכום שיחה</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((ev) => (
-                <tr
-                  key={ev.id}
-                  onClick={() => setEditingEvent(ev)}
-                  className="cursor-pointer border-b border-charcoal-line bg-ink-soft transition last:border-0 hover:bg-charcoal"
-                >
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-paper">
-                      {ev.customer?.fullName ?? ev.title ?? "—"}
-                      {ev.source === "icloud" && <span className="mr-1.5 align-middle text-xs">📱</span>}
-                    </p>
-                    <p className="text-xs text-paper-dim" dir="ltr">
-                      {ev.customer?.phone}
-                    </p>
-                  </td>
-                  <td className="px-4 py-3 text-paper-dim">{ev.eventType ?? "—"}</td>
-                  <td className="px-4 py-3 text-paper-dim">{formatDate(ev.eventDate)}</td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${EVENT_STATUS_COLORS[ev.status]}`}>
-                      {EVENT_STATUS_LABELS[ev.status]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-paper">{formatMoney(ev.price)}</td>
-                  <td className="px-4 py-3 text-paper-dim">
-                    {ev.closingProbability !== null ? `${ev.closingProbability}%` : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-paper-dim">{formatDate(ev.nextFollowUpDate)}</td>
-                  <td className="px-4 py-3 text-paper-dim">{ev.contactedBy ?? "—"}</td>
-                  <td className="max-w-[220px] truncate px-4 py-3 text-paper-dim">{ev.callNotes ?? "—"}</td>
+        <>
+          {/* Mobile: stacked cards — the 9-column table is unusable on a phone (mostly off-screen,
+              one row-scroll at a time). Same data, same tap-to-edit, laid out to read top-to-bottom instead. */}
+          <div className="flex flex-col gap-3 sm:hidden">
+            {filtered.map((ev) => (
+              <LeadCard key={ev.id} event={ev} onClick={() => setEditingEvent(ev)} />
+            ))}
+          </div>
+
+          <div className="hidden overflow-x-auto rounded-2xl border border-charcoal-line sm:block">
+            <table className="w-full min-w-[900px] text-right text-sm">
+              <thead>
+                <tr className="border-b border-charcoal-line bg-ink-soft text-xs text-paper-dim">
+                  <th className="px-4 py-3 font-medium">לקוח</th>
+                  <th className="px-4 py-3 font-medium">אירוע</th>
+                  <th className="px-4 py-3 font-medium">תאריך</th>
+                  <th className="px-4 py-3 font-medium">סטטוס</th>
+                  <th className="px-4 py-3 font-medium">מחיר</th>
+                  <th className="px-4 py-3 font-medium">% סגירה</th>
+                  <th className="px-4 py-3 font-medium">מעקב הבא</th>
+                  <th className="px-4 py-3 font-medium">מי דיבר</th>
+                  <th className="px-4 py-3 font-medium">סיכום שיחה</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filtered.map((ev) => (
+                  <tr
+                    key={ev.id}
+                    onClick={() => setEditingEvent(ev)}
+                    className="cursor-pointer border-b border-charcoal-line bg-ink-soft transition last:border-0 hover:bg-charcoal"
+                  >
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-paper">
+                        {ev.customer?.fullName ?? ev.title ?? "—"}
+                        {ev.source === "icloud" && <span className="mr-1.5 align-middle text-xs">📱</span>}
+                      </p>
+                      <p className="text-xs text-paper-dim" dir="ltr">
+                        {ev.customer?.phone}
+                      </p>
+                    </td>
+                    <td className="px-4 py-3 text-paper-dim">{ev.eventType ?? "—"}</td>
+                    <td className="px-4 py-3 text-paper-dim">{formatDate(ev.eventDate)}</td>
+                    <td className="px-4 py-3">
+                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${EVENT_STATUS_COLORS[ev.status]}`}>
+                        {EVENT_STATUS_LABELS[ev.status]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-paper">{formatMoney(ev.price)}</td>
+                    <td className="px-4 py-3 text-paper-dim">
+                      {ev.closingProbability !== null ? `${ev.closingProbability}%` : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-paper-dim">{formatDate(ev.nextFollowUpDate)}</td>
+                    <td className="px-4 py-3 text-paper-dim">{ev.contactedBy ?? "—"}</td>
+                    <td className="max-w-[220px] truncate px-4 py-3 text-paper-dim">{ev.callNotes ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {editingEvent && <EventFormModal key={editingEvent.id} onClose={() => setEditingEvent(null)} onSaved={load} editingEvent={editingEvent} />}
       {showNew && <EventFormModal key="new-lead" onClose={() => setShowNew(false)} onSaved={load} />}
     </div>
+  );
+}
+
+function LeadCard({ event: ev, onClick }: { event: EventRecord; onClick: () => void }) {
+  const subline = [ev.eventType, ev.city].filter(Boolean).join(" · ");
+
+  return (
+    <button
+      onClick={onClick}
+      className="w-full rounded-2xl border border-charcoal-line bg-ink-soft p-4 text-right transition active:bg-charcoal"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate font-medium text-paper">
+            {ev.customer?.fullName ?? ev.title ?? "—"}
+            {ev.source === "icloud" && <span className="mr-1.5 align-middle text-xs">📱</span>}
+          </p>
+          {ev.customer?.phone && (
+            <p className="text-xs text-paper-dim" dir="ltr">
+              {ev.customer.phone}
+            </p>
+          )}
+        </div>
+        <span
+          className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${EVENT_STATUS_COLORS[ev.status]}`}
+        >
+          {EVENT_STATUS_LABELS[ev.status]}
+        </span>
+      </div>
+
+      {(subline || ev.eventDate) && (
+        <p className="mt-2 text-xs text-paper-dim">
+          {subline}
+          {subline && ev.eventDate ? " · " : ""}
+          {formatDate(ev.eventDate)}
+        </p>
+      )}
+
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+        {ev.price !== null && <span className="font-medium text-paper">{formatMoney(ev.price)}</span>}
+        {ev.closingProbability !== null && (
+          <span className="text-paper-dim">{ev.closingProbability}% סגירה</span>
+        )}
+        {ev.nextFollowUpDate && (
+          <span className="rounded-full bg-ember/10 px-2 py-0.5 text-ember">
+            📅 מעקב {formatDate(ev.nextFollowUpDate)}
+          </span>
+        )}
+        {ev.contactedBy && <span className="text-paper-dim">מי דיבר: {ev.contactedBy}</span>}
+      </div>
+
+      {ev.callNotes && <p className="mt-2 line-clamp-2 text-xs text-paper-dim">{ev.callNotes}</p>}
+    </button>
   );
 }
