@@ -82,26 +82,33 @@ calendar, so don't post it anywhere public).
 
 ### iPhone → CRM sync (the other direction)
 
-Built and wired up, waiting on real credentials to actually run. The "📱 סנכרון
-מהאייפון עכשיו" button in the Calendar tab calls `POST /api/admin/icloud-sync`,
-which connects to `caldav.icloud.com` (via `tsdav`) using `ICLOUD_APPLE_ID` +
-`ICLOUD_APP_PASSWORD` — the latter **must** be an
-[app-specific password](https://appleid.apple.com) (Sign-In and Security →
-App-Specific Passwords), never the real Apple ID password. It pulls every event
-across all calendars in the account for the next 18 months (expanding recurring
-events via `node-ical`), and imports each one as a customer-less `Event` with
-`source: "icloud"` — one row per calendar day for multi-day events, deduped by
-an `externalId` of `icloud:<uid>:<date>` so re-running the sync updates existing
-rows and removes ones deleted on the phone, instead of piling up duplicates.
-iCloud-sourced events show a purple dot and a "📱 מהאייפון" badge instead of the
-usual status badge, so they read as personal blocks rather than client bookings.
+Live — connected to Tal's real iCloud account and tested end-to-end (113 events
+imported across 4 calendars on the first run). The "📱 סנכרון מהאייפון עכשיו"
+button in the Calendar tab calls `POST /api/admin/icloud-sync`, which connects
+to `caldav.icloud.com` (via `tsdav`) using `ICLOUD_APPLE_ID` + `ICLOUD_APP_PASSWORD`
+— the latter is an [app-specific password](https://appleid.apple.com)
+(Sign-In and Security → App-Specific Passwords), never the real Apple ID
+password. It pulls every event across every calendar in the account for the
+next 18 months (expanding recurring events via `node-ical`), and imports each
+one as a customer-less `Event` with `source: "icloud"` — one row per calendar
+day for multi-day events, deduped by an `externalId` of `icloud:<uid>:<date>`
+so re-running the sync updates existing rows and removes ones deleted on the
+phone, instead of piling up duplicates. iCloud-sourced events show a purple dot
+and a "📱 מהאייפון" badge instead of the usual status badge, so they read as
+personal blocks rather than client bookings.
 
 This is manual ("sync now" button), not automatic — add a Vercel Cron Job
-hitting the same endpoint on a schedule if you want it to run itself.
+hitting the same endpoint on a schedule if you want it to run itself. A full
+sync currently takes ~20-30s (sequential CalDAV round-trips per calendar),
+hence `export const maxDuration = 60` on that route.
 
-Until `ICLOUD_APPLE_ID`/`ICLOUD_APP_PASSWORD` are set (`vercel env add ...`),
-the button shows a clear "not configured yet" message instead of failing
-silently.
+**Timezone bug found and fixed while testing this**: `@neondatabase/serverless`
+converts Postgres `DATE` columns to JS `Date` objects using the process's local
+timezone, not UTC — invisible on Vercel (which runs UTC), but every date would
+have silently shifted by a day on any non-UTC host (including local dev on this
+machine, which is why it surfaced immediately during testing). Fixed by forcing
+`process.env.TZ = "UTC"` at the top of `src/lib/db.ts`, since every date in this
+app is a plain calendar date with no meaningful time component anyway.
 
 ## Testimonials
 

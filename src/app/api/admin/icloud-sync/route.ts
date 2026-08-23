@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { syncFromICloud } from "@/lib/icloud-sync";
 
+// A full sync (multiple CalDAV round-trips across every calendar) can take 20-30s+;
+// stay under Vercel's serverless cap so the request doesn't get killed mid-sync.
+export const maxDuration = 60;
+
 export async function POST() {
   try {
     const result = await syncFromICloud();
