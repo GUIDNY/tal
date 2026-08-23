@@ -66,12 +66,18 @@ marked `TODO` there:
   the date with a title (no customer) — e.g. a personal day off. Event status
   (`lead` / `tentative` / `confirmed` / `completed` / `cancelled`) drives both the
   colored dot on the calendar and the public availability warning.
-Just those two tabs — a separate customer directory (searchable list, per-customer
-notes, full event history) was built and then removed on request; the CRM table
-above is the only customer-facing view now. `Customer` records still exist
-underneath (deduped by phone, created automatically from website inquiries or
-inline from the event form) and back every row in the pipeline table, but there's
-no dedicated page for browsing them outside of an event's context.
+A separate customer directory (searchable list, per-customer notes, full event
+history) was built and then removed on request; the CRM table above is the only
+customer-facing view now. `Customer` records still exist underneath (deduped by
+phone, created automatically from website inquiries or inline from the event
+form) and back every row in the pipeline table, but there's no dedicated page
+for browsing them outside of an event's context.
+- **ספקים (Suppliers) tab**: a plain table for tracking vendors Tal works with
+  (sound techs, photographers, etc.) — deliberately minimal, exactly the four
+  fields asked for: שם, טלפון, מי זה (role/description), and מצב (status:
+  פעיל / בבדיקה / לא פעיל). Click a row to edit or delete. `Supplier` is its
+  own model, unrelated to `Customer`/`Event` — no phone-based dedup, since
+  there's no incoming-lead-matching use case for vendors.
 
 To change the admin password: `vercel env rm ADMIN_PASSWORD production` then
 `vercel env add ADMIN_PASSWORD production`.

@@ -18,6 +18,24 @@ enum EventStatus {
   cancelled
 }
 
+enum SupplierStatus {
+  active
+  pending
+  inactive
+}
+
+model Supplier {
+  id        String         @id @default(uuid())
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  fullName  String
+  phone     String
+  role      String? // מי זה — לדוגמה "צלם", "טכנאי סאונד"
+  status    SupplierStatus @default(active)
+
+  @@index([status])
+}
+
 model Customer {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())

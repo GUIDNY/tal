@@ -3,9 +3,10 @@
 import { useState } from "react";
 import CalendarTab from "@/components/admin/CalendarTab";
 import LeadsTable from "@/components/admin/LeadsTable";
+import SuppliersTab from "@/components/admin/SuppliersTab";
 
 export default function AdminDashboard() {
-  const [tab, setTab] = useState<"crm" | "calendar">("crm");
+  const [tab, setTab] = useState<"crm" | "calendar" | "suppliers">("crm");
 
   return (
     <div className="flex flex-col gap-6">
@@ -16,9 +17,12 @@ export default function AdminDashboard() {
         <TabButton active={tab === "calendar"} onClick={() => setTab("calendar")}>
           יומן
         </TabButton>
+        <TabButton active={tab === "suppliers"} onClick={() => setTab("suppliers")}>
+          ספקים
+        </TabButton>
       </div>
 
-      {tab === "crm" ? <LeadsTable /> : <CalendarTab />}
+      {tab === "crm" ? <LeadsTable /> : tab === "calendar" ? <CalendarTab /> : <SuppliersTab />}
     </div>
   );
 }
