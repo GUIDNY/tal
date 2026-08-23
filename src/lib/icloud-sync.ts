@@ -16,6 +16,14 @@ function textValue(value: string | { val: string } | undefined, fallback: string
   return typeof value === "string" ? value : value.val;
 }
 
+/** Apple returns calendar-color as 8-digit hex (#RRGGBBAA) — CSS wants 6-digit. */
+function normalizeColor(value: string | undefined): string | null {
+  if (!value) return null;
+  const hex = value.trim();
+  const match = /^#?([0-9a-fA-F]{6})/.exec(hex);
+  return match ? `#${match[1]}` : null;
+}
+
 /** Every calendar day an event instance touches, as yyyy-mm-dd (all-day DTEND is exclusive per RFC 5545). */
 function datesBetween(start: Date, end: Date, isFullDay: boolean): string[] {
   const cursor = new Date(start.getFullYear(), start.getMonth(), start.getDate());
@@ -52,9 +60,10 @@ export async function syncFromICloud(): Promise<SyncResult> {
   const to = new Date(from);
   to.setMonth(to.getMonth() + 18);
 
-  const imported = new Map<string, { title: string; eventDate: string }>();
+  const imported = new Map<string, { title: string; eventDate: string; color: string | null }>();
 
   for (const calendar of calendars) {
+    const color = normalizeColor(calendar.calendarColor);
     const objects = await client.fetchCalendarObjects({
       calendar,
       timeRange: { start: from.toISOString(), end: to.toISOString() },
@@ -79,7 +88,7 @@ export async function syncFromICloud(): Promise<SyncResult> {
           const title = textValue(instance.summary, "אירוע ביומן");
           for (const dateStr of datesBetween(instance.start, instance.end, instance.isFullDay)) {
             const externalId = `icloud:${component.uid}:${dateStr}`;
-            imported.set(externalId, { title, eventDate: dateStr });
+            imported.set(externalId, { title, eventDate: dateStr, color });
           }
         }
       }
@@ -105,10 +114,12 @@ export async function syncFromICloud(): Promise<SyncResult> {
         eventDate: new Date(item.eventDate),
         status: "confirmed",
         source: "icloud",
+        color: item.color,
       },
       update: {
         title: item.title,
         eventDate: new Date(item.eventDate),
+        color: item.color,
       },
     });
   }

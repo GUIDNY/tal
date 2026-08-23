@@ -46,6 +46,7 @@ model Event {
   status      EventStatus @default(lead)
   source      String      @default("website")
   externalId  String?     @unique // iCloud calendar UID (+ date, for multi-day events), used to dedupe on re-sync
+  color       String?     // hex color of the source iCloud calendar, for icloud-sourced events
 
   @@index([status])
   @@index([eventDate])

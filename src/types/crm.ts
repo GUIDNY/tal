@@ -16,6 +16,7 @@ export interface EventRecord {
   message: string | null;
   status: EventStatus;
   source: string;
+  color: string | null;
 }
 
 export interface CustomerRecord {

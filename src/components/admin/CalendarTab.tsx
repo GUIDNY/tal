@@ -119,9 +119,14 @@ export default function CalendarTab() {
                 {dayEvents.slice(0, 3).map((ev) => (
                   <span
                     key={ev.id}
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      ev.source === "icloud" ? "bg-purple-400" : EVENT_STATUS_DOT[ev.status]
-                    }`}
+                    className={
+                      ev.source === "icloud" && !ev.color
+                        ? "h-1.5 w-1.5 rounded-full bg-purple-400"
+                        : ev.source !== "icloud"
+                          ? `h-1.5 w-1.5 rounded-full ${EVENT_STATUS_DOT[ev.status]}`
+                          : "h-1.5 w-1.5 rounded-full"
+                    }
+                    style={ev.source === "icloud" && ev.color ? { backgroundColor: ev.color } : undefined}
                   />
                 ))}
                 {dayEvents.length > 3 && <span className="text-[10px] text-paper-dim">+{dayEvents.length - 3}</span>}
@@ -155,9 +160,18 @@ export default function CalendarTab() {
                 className="flex flex-wrap items-center gap-3 rounded-xl border border-charcoal-line bg-ink px-4 py-3 text-right transition hover:border-paper-dim"
               >
                 <span
-                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                    ev.source === "icloud" ? "bg-purple-400/20 text-purple-300" : EVENT_STATUS_COLORS[ev.status]
-                  }`}
+                  className={
+                    ev.source === "icloud" && !ev.color
+                      ? "rounded-full bg-purple-400/20 px-2.5 py-0.5 text-xs font-medium text-purple-300"
+                      : ev.source !== "icloud"
+                        ? `rounded-full px-2.5 py-0.5 text-xs font-medium ${EVENT_STATUS_COLORS[ev.status]}`
+                        : "rounded-full px-2.5 py-0.5 text-xs font-medium"
+                  }
+                  style={
+                    ev.source === "icloud" && ev.color
+                      ? { backgroundColor: `${ev.color}33`, color: ev.color }
+                      : undefined
+                  }
                 >
                   {ev.source === "icloud" ? "📱 מהאייפון" : EVENT_STATUS_LABELS[ev.status]}
                 </span>
