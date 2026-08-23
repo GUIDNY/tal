@@ -53,7 +53,14 @@ export async function syncFromICloud(): Promise<SyncResult> {
     defaultAccountType: "caldav",
   });
 
-  const calendars = await client.fetchCalendars();
+  const allCalendars = await client.fetchCalendars();
+
+  const includedNames = process.env.ICLOUD_INCLUDED_CALENDARS?.split(",")
+    .map((n) => n.trim())
+    .filter(Boolean);
+  const calendars = includedNames?.length
+    ? allCalendars.filter((c) => includedNames.includes(typeof c.displayName === "string" ? c.displayName : ""))
+    : allCalendars;
 
   const from = new Date();
   from.setHours(0, 0, 0, 0);

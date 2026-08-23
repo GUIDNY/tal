@@ -88,18 +88,22 @@ button in the Calendar tab calls `POST /api/admin/icloud-sync`, which connects
 to `caldav.icloud.com` (via `tsdav`) using `ICLOUD_APPLE_ID` + `ICLOUD_APP_PASSWORD`
 — the latter is an [app-specific password](https://appleid.apple.com)
 (Sign-In and Security → App-Specific Passwords), never the real Apple ID
-password. It pulls every event across every calendar in the account for the
-next 18 months (expanding recurring events via `node-ical`), and imports each
-one as a customer-less `Event` with `source: "icloud"` — one row per calendar
-day for multi-day events, deduped by an `externalId` of `icloud:<uid>:<date>`
-so re-running the sync updates existing rows and removes ones deleted on the
-phone, instead of piling up duplicates. Each event stores the hex `color` of
-its source iCloud calendar (Apple returns this per-calendar via CalDAV's
-`calendar-color` property, already requested by `tsdav`'s default `fetchCalendars`
-props) — the calendar dot and the "📱 מהאייפון" badge use that real color instead
-of a flat placeholder, so at a glance you can tell which iPhone calendar (e.g.
-"Work" vs "Personal") an event came from, the same way it looks on the phone.
-Falls back to a flat purple only if a calendar has no color set.
+password. `ICLOUD_INCLUDED_CALENDARS` (comma-separated calendar display names,
+currently just `"Work"`) restricts which of the account's calendars actually
+get pulled in — Tal's other three calendars ("לוח שנה", "Home", "Reminders")
+are personal and were explicitly excluded on request; unset the env var
+entirely to sync every calendar again. Within the included calendars it pulls
+every event for the next 18 months (expanding recurring events via
+`node-ical`), and imports each one as a customer-less `Event` with
+`source: "icloud"` — one row per calendar day for multi-day events, deduped
+by an `externalId` of `icloud:<uid>:<date>` so re-running the sync updates
+existing rows and removes ones deleted on the phone (or, as just happened,
+ones dropped by narrowing `ICLOUD_INCLUDED_CALENDARS`), instead of piling up
+duplicates. Each event stores the hex `color` of its source iCloud calendar
+(Apple returns this per-calendar via CalDAV's `calendar-color` property,
+already requested by `tsdav`'s default `fetchCalendars` props) — the calendar
+dot and the "📱 מהאייפון" badge use that real color instead of a flat
+placeholder.
 
 This is manual ("sync now" button), not automatic — add a Vercel Cron Job
 hitting the same endpoint on a schedule if you want it to run itself. A full
