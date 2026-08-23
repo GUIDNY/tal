@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import CustomersTab from "@/components/admin/CustomersTab";
 import CalendarTab from "@/components/admin/CalendarTab";
 import LeadsTable from "@/components/admin/LeadsTable";
 
 export default function AdminDashboard() {
-  const [tab, setTab] = useState<"crm" | "calendar" | "customers">("crm");
+  const [tab, setTab] = useState<"crm" | "calendar">("crm");
 
   return (
     <div className="flex flex-col gap-6">
@@ -17,12 +16,9 @@ export default function AdminDashboard() {
         <TabButton active={tab === "calendar"} onClick={() => setTab("calendar")}>
           יומן
         </TabButton>
-        <TabButton active={tab === "customers"} onClick={() => setTab("customers")}>
-          לקוחות
-        </TabButton>
       </div>
 
-      {tab === "crm" ? <LeadsTable /> : tab === "calendar" ? <CalendarTab /> : <CustomersTab />}
+      {tab === "crm" ? <LeadsTable /> : <CalendarTab />}
     </div>
   );
 }

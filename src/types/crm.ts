@@ -32,15 +32,11 @@ export interface EventRecord {
   callNotes: string | null;
 }
 
-export interface CustomerRecord {
+/** Slim shape used for the "existing customer" picker — the full profile (notes, event history) has no UI consumer right now. */
+export interface CustomerOption {
   id: string;
-  createdAt: string;
-  updatedAt: string;
   fullName: string;
   phone: string;
-  email: string | null;
-  notes: string | null;
-  events: EventRecord[];
 }
 
 export const EVENT_STATUS_LABELS: Record<EventStatus, string> = {

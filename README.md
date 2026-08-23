@@ -66,9 +66,12 @@ marked `TODO` there:
   the date with a title (no customer) — e.g. a personal day off. Event status
   (`lead` / `tentative` / `confirmed` / `completed` / `cancelled`) drives both the
   colored dot on the calendar and the public availability warning.
-- **לקוחות (Customers) tab**: searchable customer directory; click one to see
-  contact info, editable notes, and their full event history. Customers are also
-  created automatically from website inquiries (deduped by phone number).
+Just those two tabs — a separate customer directory (searchable list, per-customer
+notes, full event history) was built and then removed on request; the CRM table
+above is the only customer-facing view now. `Customer` records still exist
+underneath (deduped by phone, created automatically from website inquiries or
+inline from the event form) and back every row in the pipeline table, but there's
+no dedicated page for browsing them outside of an event's context.
 
 To change the admin password: `vercel env rm ADMIN_PASSWORD production` then
 `vercel env add ADMIN_PASSWORD production`.

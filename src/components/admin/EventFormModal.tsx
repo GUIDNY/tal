@@ -1,7 +1,7 @@
 "use client";
 
 import { cloneElement, useEffect, useId, useState } from "react";
-import type { CustomerRecord, EventRecord, EventStatus } from "@/types/crm";
+import type { CustomerOption, EventRecord, EventStatus } from "@/types/crm";
 import { EVENT_STATUS_LABELS } from "@/types/crm";
 
 interface EventFormModalProps {
@@ -28,7 +28,7 @@ export default function EventFormModal({
   defaultCustomerId,
   editingEvent,
 }: EventFormModalProps) {
-  const [customers, setCustomers] = useState<CustomerRecord[]>([]);
+  const [customers, setCustomers] = useState<CustomerOption[]>([]);
   const [mode, setMode] = useState<"existing" | "new" | "block">(
     editingEvent && !editingEvent.customerId ? "block" : "existing"
   );
