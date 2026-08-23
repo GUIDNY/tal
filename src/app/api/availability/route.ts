@@ -9,16 +9,21 @@ export async function GET() {
   const oneYearOut = new Date(today);
   oneYearOut.setUTCFullYear(oneYearOut.getUTCFullYear() + 1);
 
-  const dates = await prisma.availabilityDate.findMany({
-    where: { date: { gte: today, lte: oneYearOut }, status: { not: "available" } },
-    select: { date: true, status: true },
-    orderBy: { date: "asc" },
+  const events = await prisma.event.findMany({
+    where: {
+      eventDate: { gte: today, lte: oneYearOut },
+      status: { in: ["tentative", "confirmed"] },
+    },
+    select: { eventDate: true, status: true },
+    orderBy: { eventDate: "asc" },
   });
 
   return NextResponse.json({
-    dates: dates.map((d) => ({
-      date: d.date.toISOString().slice(0, 10),
-      status: d.status,
-    })),
+    dates: events
+      .filter((e) => e.eventDate)
+      .map((e) => ({
+        date: e.eventDate!.toISOString().slice(0, 10),
+        status: e.status === "confirmed" ? "booked" : "hold",
+      })),
   });
 }

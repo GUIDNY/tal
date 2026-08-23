@@ -10,45 +10,43 @@ datasource db {
   provider = "postgresql"
 }
 
-enum BookingStatus {
-  new
-  contacted
-  qualified
-  booked
-  lost
+enum EventStatus {
+  lead
+  tentative
+  confirmed
+  completed
+  cancelled
 }
 
-enum DateStatus {
-  available
-  hold
-  booked
+model Customer {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  fullName  String
+  phone     String   @unique
+  email     String?
+  notes     String?
+  events    Event[]
 }
 
-model BookingRequest {
-  id          String        @id @default(uuid())
-  createdAt   DateTime      @default(now())
-  fullName    String
-  phone       String
-  email       String?
-  eventType   String
-  eventDate   DateTime?     @db.Date
+model Event {
+  id          String      @id @default(uuid())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  customerId  String?
+  customer    Customer?   @relation(fields: [customerId], references: [id])
+  title       String? // used when there's no linked customer, e.g. "לא זמין — חופשה"
+  eventType   String?
+  eventDate   DateTime?   @db.Date
   venue       String?
-  city        String
-  guestCount  String
-  serviceType String
+  city        String?
+  guestCount  String?
+  serviceType String?
   message     String?
-  source      String        @default("website")
-  status      BookingStatus @default(new)
+  status      EventStatus @default(lead)
+  source      String      @default("website")
 
   @@index([status])
   @@index([eventDate])
+  @@index([customerId])
 }
-
-model AvailabilityDate {
-  id        String     @id @default(uuid())
-  date      DateTime   @unique @db.Date
-  status    DateStatus
-  note      String?
-  updatedAt DateTime   @updatedAt
-}
-

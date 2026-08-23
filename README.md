@@ -32,29 +32,35 @@ marked `TODO` there:
 
 - Public flow: the 7-step "בדיקת זמינות" form opens WhatsApp with a prefilled
   message (synchronously, so popup blockers don't kill it) **and** saves the lead
-  to Postgres via `POST /api/bookings` in the background. Includes a honeypot
-  field for basic spam protection.
-- `GET /api/availability` — public, returns dates marked `hold`/`booked` so the
-  date step can show a soft warning (never a hard block — see original spec).
+  to Postgres via `POST /api/bookings` in the background — this finds-or-creates
+  a `Customer` by phone number and attaches a `lead`-status `Event` to it, so
+  repeat inquiries land on the same customer record instead of duplicating them.
+  Includes a honeypot field for basic spam protection.
+- `GET /api/availability` — public, returns dates with a `tentative`/`confirmed`
+  Event so the date step can show a soft warning (never a hard block — see
+  original spec).
 - Database: Neon Postgres, provisioned via `vercel install neon` and connected to
-  the Vercel project. Schema lives in `prisma/schema.prisma`
-  (`BookingRequest`, `AvailabilityDate`). Run `npx prisma migrate dev` for schema
-  changes.
+  the Vercel project. Schema lives in `prisma/schema.prisma` (`Customer`, `Event`).
+  Run `npx prisma migrate dev` for schema changes.
 
-## Admin dashboard — `/admin`
+## CRM / Admin dashboard — `/admin`
 
 - Auth: single shared password (`ADMIN_PASSWORD` env var) → HMAC-signed session
   cookie (`ADMIN_SESSION_SECRET` env var), verified in `src/proxy.ts` (Next 16's
   successor to `middleware.ts`) for both `/admin/*` pages and `/api/admin/*` routes.
-  Both env vars were generated and pushed to Vercel (Production + Development)
-  when this was built — check the Vercel dashboard's Environment Variables page
-  for the current values, or generate new ones and update them there.
-- **פניות tab**: list of leads with status filter chips, search, expandable detail
-  (call / WhatsApp / email actions), and status buttons (new → contacted →
-  qualified → booked / lost).
-- **זמינות tab**: mark a date as `hold` or `booked` (with an optional note); marking
-  it `available` again just removes the entry. This is what powers the public
-  availability warning above.
+  It's one shared login — good enough for two people (Tal + manager) sharing one
+  password; say the word if you'd rather have separate accounts. Both env vars
+  were generated and pushed to Vercel (Production + Development) when this was
+  built — check the Vercel dashboard's Environment Variables page for the
+  current values, or generate new ones and update them there.
+- **יומן (Calendar) tab**: month grid, click a day to see/add events. Adding an
+  event lets you pick an existing customer, quick-create a new one, or just block
+  the date with a title (no customer) — e.g. a personal day off. Event status
+  (`lead` / `tentative` / `confirmed` / `completed` / `cancelled`) drives both the
+  colored dot on the calendar and the public availability warning.
+- **לקוחות (Customers) tab**: searchable customer list; click one to see contact
+  info, editable notes, and their full event history. Customers are also created
+  automatically from website inquiries (deduped by phone number).
 
 To change the admin password: `vercel env rm ADMIN_PASSWORD production` then
 `vercel env add ADMIN_PASSWORD production`.
