@@ -80,6 +80,29 @@ The feed token lives in `CALENDAR_FEED_TOKEN`; rotate it the same way as
 `ADMIN_PASSWORD` above if it ever leaks (anyone with the link can read the
 calendar, so don't post it anywhere public).
 
+### iPhone → CRM sync (the other direction)
+
+Built and wired up, waiting on real credentials to actually run. The "📱 סנכרון
+מהאייפון עכשיו" button in the Calendar tab calls `POST /api/admin/icloud-sync`,
+which connects to `caldav.icloud.com` (via `tsdav`) using `ICLOUD_APPLE_ID` +
+`ICLOUD_APP_PASSWORD` — the latter **must** be an
+[app-specific password](https://appleid.apple.com) (Sign-In and Security →
+App-Specific Passwords), never the real Apple ID password. It pulls every event
+across all calendars in the account for the next 18 months (expanding recurring
+events via `node-ical`), and imports each one as a customer-less `Event` with
+`source: "icloud"` — one row per calendar day for multi-day events, deduped by
+an `externalId` of `icloud:<uid>:<date>` so re-running the sync updates existing
+rows and removes ones deleted on the phone, instead of piling up duplicates.
+iCloud-sourced events show a purple dot and a "📱 מהאייפון" badge instead of the
+usual status badge, so they read as personal blocks rather than client bookings.
+
+This is manual ("sync now" button), not automatic — add a Vercel Cron Job
+hitting the same endpoint on a schedule if you want it to run itself.
+
+Until `ICLOUD_APPLE_ID`/`ICLOUD_APP_PASSWORD` are set (`vercel env add ...`),
+the button shows a clear "not configured yet" message instead of failing
+silently.
+
 ## Testimonials
 
 `src/components/Testimonials.tsx` renders nothing until real testimonials are

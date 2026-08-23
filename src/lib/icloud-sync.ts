@@ -1,0 +1,117 @@
+import { createDAVClient } from "tsdav";
+import { sync as icalSync, expandRecurringEvent } from "node-ical";
+import type { CalendarResponse } from "node-ical";
+import { prisma } from "./db";
+import { toDateKey } from "./calendar";
+
+export interface SyncResult {
+  imported: number;
+  removed: number;
+  calendarsScanned: number;
+}
+
+/** node-ical wraps some text fields as `{ val, params }` when the property has iCal parameters. */
+function textValue(value: string | { val: string } | undefined, fallback: string): string {
+  if (!value) return fallback;
+  return typeof value === "string" ? value : value.val;
+}
+
+/** Every calendar day an event instance touches, as yyyy-mm-dd (all-day DTEND is exclusive per RFC 5545). */
+function datesBetween(start: Date, end: Date, isFullDay: boolean): string[] {
+  const cursor = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const last = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+  if (isFullDay) last.setDate(last.getDate() - 1);
+  if (last < cursor) last.setTime(cursor.getTime());
+
+  const dates: string[] = [];
+  while (cursor <= last) {
+    dates.push(toDateKey(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return dates;
+}
+
+export async function syncFromICloud(): Promise<SyncResult> {
+  const username = process.env.ICLOUD_APPLE_ID;
+  const password = process.env.ICLOUD_APP_PASSWORD;
+  if (!username || !password) {
+    throw new Error("ICLOUD_APPLE_ID / ICLOUD_APP_PASSWORD אינם מוגדרים");
+  }
+
+  const client = await createDAVClient({
+    serverUrl: "https://caldav.icloud.com",
+    credentials: { username, password },
+    authMethod: "Basic",
+    defaultAccountType: "caldav",
+  });
+
+  const calendars = await client.fetchCalendars();
+
+  const from = new Date();
+  from.setHours(0, 0, 0, 0);
+  const to = new Date(from);
+  to.setMonth(to.getMonth() + 18);
+
+  const imported = new Map<string, { title: string; eventDate: string }>();
+
+  for (const calendar of calendars) {
+    const objects = await client.fetchCalendarObjects({
+      calendar,
+      timeRange: { start: from.toISOString(), end: to.toISOString() },
+    });
+
+    for (const obj of objects) {
+      if (!obj.data) continue;
+
+      let parsed: CalendarResponse;
+      try {
+        parsed = icalSync.parseICS(obj.data);
+      } catch {
+        continue; // skip anything malformed rather than aborting the whole sync
+      }
+
+      for (const component of Object.values(parsed)) {
+        if (!component || component.type !== "VEVENT") continue;
+        if (component.status === "CANCELLED") continue;
+
+        const instances = expandRecurringEvent(component, { from, to });
+        for (const instance of instances) {
+          const title = textValue(instance.summary, "אירוע ביומן");
+          for (const dateStr of datesBetween(instance.start, instance.end, instance.isFullDay)) {
+            const externalId = `icloud:${component.uid}:${dateStr}`;
+            imported.set(externalId, { title, eventDate: dateStr });
+          }
+        }
+      }
+    }
+  }
+
+  const existing = await prisma.event.findMany({
+    where: { source: "icloud", eventDate: { gte: from, lte: to } },
+    select: { id: true, externalId: true },
+  });
+
+  const staleIds = existing.filter((e) => e.externalId && !imported.has(e.externalId)).map((e) => e.id);
+  if (staleIds.length) {
+    await prisma.event.deleteMany({ where: { id: { in: staleIds } } });
+  }
+
+  for (const [externalId, item] of imported) {
+    await prisma.event.upsert({
+      where: { externalId },
+      create: {
+        externalId,
+        title: item.title,
+        eventDate: new Date(item.eventDate),
+        status: "confirmed",
+        source: "icloud",
+      },
+      update: {
+        title: item.title,
+        eventDate: new Date(item.eventDate),
+      },
+    });
+  }
+
+  return { imported: imported.size, removed: staleIds.length, calendarsScanned: calendars.length };
+}

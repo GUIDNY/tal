@@ -45,6 +45,7 @@ model Event {
   message     String?
   status      EventStatus @default(lead)
   source      String      @default("website")
+  externalId  String?     @unique // iCloud calendar UID (+ date, for multi-day events), used to dedupe on re-sync
 
   @@index([status])
   @@index([eventDate])

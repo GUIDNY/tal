@@ -6,6 +6,7 @@ import { EVENT_STATUS_COLORS, EVENT_STATUS_DOT, EVENT_STATUS_LABELS } from "@/ty
 import { getMonthGrid, toDateKey, HEBREW_MONTH_NAMES, HEBREW_WEEKDAY_SHORT } from "@/lib/calendar";
 import EventFormModal from "./EventFormModal";
 import CalendarFeedLink from "./CalendarFeedLink";
+import ICloudSyncButton from "./ICloudSyncButton";
 
 export default function CalendarTab() {
   const [cursor, setCursor] = useState(() => {
@@ -52,6 +53,7 @@ export default function CalendarTab() {
   return (
     <div className="flex flex-col gap-5">
       <CalendarFeedLink />
+      <ICloudSyncButton onSynced={load} />
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -115,7 +117,12 @@ export default function CalendarTab() {
               </span>
               <div className="flex flex-wrap gap-1">
                 {dayEvents.slice(0, 3).map((ev) => (
-                  <span key={ev.id} className={`h-1.5 w-1.5 rounded-full ${EVENT_STATUS_DOT[ev.status]}`} />
+                  <span
+                    key={ev.id}
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      ev.source === "icloud" ? "bg-purple-400" : EVENT_STATUS_DOT[ev.status]
+                    }`}
+                  />
                 ))}
                 {dayEvents.length > 3 && <span className="text-[10px] text-paper-dim">+{dayEvents.length - 3}</span>}
               </div>
@@ -147,8 +154,12 @@ export default function CalendarTab() {
                 onClick={() => setEditingEvent(ev)}
                 className="flex flex-wrap items-center gap-3 rounded-xl border border-charcoal-line bg-ink px-4 py-3 text-right transition hover:border-paper-dim"
               >
-                <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${EVENT_STATUS_COLORS[ev.status]}`}>
-                  {EVENT_STATUS_LABELS[ev.status]}
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                    ev.source === "icloud" ? "bg-purple-400/20 text-purple-300" : EVENT_STATUS_COLORS[ev.status]
+                  }`}
+                >
+                  {ev.source === "icloud" ? "📱 מהאייפון" : EVENT_STATUS_LABELS[ev.status]}
                 </span>
                 <span className="text-sm font-medium text-paper">
                   {ev.customer?.fullName ?? ev.title ?? "אירוע"}
