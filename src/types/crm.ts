@@ -79,5 +79,5 @@ export const DEAL_STAGE_LABELS: Record<DealStage, string> = {
 };
 
 /** The two people who use this CRM — closedBy/contactedBy are constrained to these rather than free text. */
-export const TEAM_MEMBERS = ["גינדי", "טל"] as const;
+export const TEAM_MEMBERS = ["גינדי", "טל", "ברמן"] as const;
 export type TeamMember = (typeof TEAM_MEMBERS)[number];
