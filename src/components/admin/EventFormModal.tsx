@@ -2,7 +2,7 @@
 
 import { cloneElement, useEffect, useId, useState } from "react";
 import type { CustomerOption, EventRecord, EventStatus } from "@/types/crm";
-import { EVENT_STATUS_LABELS } from "@/types/crm";
+import { EVENT_STATUS_LABELS, TEAM_MEMBERS } from "@/types/crm";
 
 interface EventFormModalProps {
   onClose: () => void;
@@ -122,6 +122,17 @@ export default function EventFormModal({
       const data = await res.json().catch(() => null);
       setError(data?.error ?? "שגיאה בשמירה");
     }
+  }
+
+  async function handleDelete() {
+    if (!editingEvent) return;
+    const label = editingEvent.customer?.fullName ?? editingEvent.title ?? "האירוע";
+    if (!confirm(`למחוק את הליד של ${label}?`)) return;
+    setSaving(true);
+    await fetch(`/api/admin/events/${editingEvent.id}`, { method: "DELETE" });
+    setSaving(false);
+    onSaved();
+    onClose();
   }
 
   return (
@@ -299,12 +310,14 @@ export default function EventFormModal({
                 </div>
                 <div className="mt-3">
                   <Field label="מי סגר">
-                    <input
-                      type="text"
-                      value={closedBy}
-                      onChange={(e) => setClosedBy(e.target.value)}
-                      className={inputClass}
-                    />
+                    <select value={closedBy} onChange={(e) => setClosedBy(e.target.value)} className={inputClass}>
+                      <option value="">—</option>
+                      {TEAM_MEMBERS.map((m) => (
+                        <option key={m} value={m}>
+                          {m}
+                        </option>
+                      ))}
+                    </select>
                   </Field>
                 </div>
               </div>
@@ -321,12 +334,14 @@ export default function EventFormModal({
                     />
                   </Field>
                   <Field label="מי דיבר">
-                    <input
-                      type="text"
-                      value={contactedBy}
-                      onChange={(e) => setContactedBy(e.target.value)}
-                      className={inputClass}
-                    />
+                    <select value={contactedBy} onChange={(e) => setContactedBy(e.target.value)} className={inputClass}>
+                      <option value="">—</option>
+                      {TEAM_MEMBERS.map((m) => (
+                        <option key={m} value={m}>
+                          {m}
+                        </option>
+                      ))}
+                    </select>
                   </Field>
                 </div>
                 <div className="mt-3">
@@ -359,21 +374,35 @@ export default function EventFormModal({
 
           {error && <p className="text-sm text-red-400">{error}</p>}
 
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-full border border-charcoal-line px-5 py-2.5 text-sm text-paper-dim"
-            >
-              ביטול
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-full bg-champagne px-6 py-2.5 text-sm font-semibold text-ink disabled:opacity-50"
-            >
-              {saving ? "שומר..." : "שמירה"}
-            </button>
+          <div className="flex items-center justify-between gap-3 pt-2">
+            {editingEvent ? (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={saving}
+                className="text-sm text-red-400 transition hover:text-red-300 disabled:opacity-50"
+              >
+                מחיקת ליד
+              </button>
+            ) : (
+              <span />
+            )}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-full border border-charcoal-line px-5 py-2.5 text-sm text-paper-dim"
+              >
+                ביטול
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="rounded-full bg-champagne px-6 py-2.5 text-sm font-semibold text-ink disabled:opacity-50"
+              >
+                {saving ? "שומר..." : "שמירה"}
+              </button>
+            </div>
           </div>
         </form>
       </div>

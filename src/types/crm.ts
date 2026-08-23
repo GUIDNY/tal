@@ -63,37 +63,21 @@ export const EVENT_STATUS_DOT: Record<EventStatus, string> = {
   cancelled: "bg-paper-dim",
 };
 
-export type FollowUpUrgency = "overdue" | "soon" | "later" | "contacted" | "untouched";
+export type DealStage = "all" | "closed" | "in_progress";
 
-const SOON_THRESHOLD_DAYS = 3;
-
-/** Buckets a lead by how urgently it needs a call, for filtering/sorting the pipeline table. */
-export function getFollowUpUrgency(event: Pick<EventRecord, "nextFollowUpDate" | "lastContactedAt">): FollowUpUrgency {
-  if (event.nextFollowUpDate) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const due = new Date(event.nextFollowUpDate);
-    const daysUntil = Math.round((due.getTime() - today.getTime()) / 86_400_000);
-    if (daysUntil < 0) return "overdue";
-    if (daysUntil <= SOON_THRESHOLD_DAYS) return "soon";
-    return "later";
-  }
-  if (event.lastContactedAt) return "contacted";
-  return "untouched";
+/** Groups the finer-grained EventStatus into the two buckets the pipeline table filters by. */
+export function getDealStage(status: EventStatus): "closed" | "in_progress" | "other" {
+  if (status === "confirmed" || status === "completed") return "closed";
+  if (status === "lead" || status === "tentative") return "in_progress";
+  return "other"; // cancelled — shown under "הכל" only
 }
 
-export const FOLLOW_UP_LABELS: Record<FollowUpUrgency, string> = {
-  overdue: "באיחור",
-  soon: "קרוב לשיחה",
-  later: "רחוק לשיחה",
-  contacted: "כבר דיברנו",
-  untouched: "ללא מעקב",
+export const DEAL_STAGE_LABELS: Record<DealStage, string> = {
+  all: "הכל",
+  closed: "נסגר",
+  in_progress: "בתהליך",
 };
 
-export const FOLLOW_UP_COLORS: Record<FollowUpUrgency, string> = {
-  overdue: "bg-red-500/20 text-red-400",
-  soon: "bg-ember/20 text-ember",
-  later: "bg-teal/20 text-teal",
-  contacted: "bg-green-500/20 text-green-400",
-  untouched: "bg-paper-dim/20 text-paper-dim",
-};
+/** The two people who use this CRM — closedBy/contactedBy are constrained to these rather than free text. */
+export const TEAM_MEMBERS = ["גינדי", "טל"] as const;
+export type TeamMember = (typeof TEAM_MEMBERS)[number];

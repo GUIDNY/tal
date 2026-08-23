@@ -57,10 +57,13 @@ marked `TODO` there:
   customer, as a sortable table, not just a per-customer history. Each row carries
   deal fields (`price`, `vatAmount`, `commissionPercent`, `closingProbability`,
   `closedBy`) and follow-up fields (`nextFollowUpDate`, `contactedBy`, `callNotes`,
-  `lastContactedAt`, stamped by a "✓ סמן שדיברנו עכשיו" button). Filter chips bucket
-  rows by `getFollowUpUrgency()` in `src/types/crm.ts` — overdue / קרוב לשיחה (due
-  within 3 days) / רחוק לשיחה / כבר דיברנו / ללא מעקב — computed client-side from
-  the two date fields, not stored as a separate status.
+  `lastContactedAt`, stamped by a "✓ סמן שדיברנו עכשיו" button). Filter chips are
+  `הכל` / `נסגר` (status `confirmed`/`completed`) / `בתהליך` (status `lead`/`tentative`)
+  via `getDealStage()` in `src/types/crm.ts`, plus a "כולם / גינדי / טל" owner
+  dropdown that matches either `closedBy` or `contactedBy`. Both of those fields
+  are dropdowns constrained to `TEAM_MEMBERS` (`["גינדי", "טל"]`) rather than free
+  text, so the owner filter always has something exact to match against. Rows can
+  be deleted from inside the edit modal.
 - **יומן (Calendar) tab**: month grid, click a day to see/add events. Adding an
   event lets you pick an existing customer, quick-create a new one, or just block
   the date with a title (no customer) — e.g. a personal day off. Event status

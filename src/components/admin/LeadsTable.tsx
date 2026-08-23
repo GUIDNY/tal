@@ -1,18 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { EventRecord, FollowUpUrgency } from "@/types/crm";
-import { EVENT_STATUS_COLORS, EVENT_STATUS_LABELS, FOLLOW_UP_COLORS, FOLLOW_UP_LABELS, getFollowUpUrgency } from "@/types/crm";
+import type { DealStage, EventRecord } from "@/types/crm";
+import { DEAL_STAGE_LABELS, EVENT_STATUS_COLORS, EVENT_STATUS_LABELS, TEAM_MEMBERS, getDealStage } from "@/types/crm";
 import EventFormModal from "./EventFormModal";
 
-const FILTERS: Array<{ value: "all" | FollowUpUrgency; label: string }> = [
-  { value: "all", label: "הכל" },
-  { value: "overdue", label: FOLLOW_UP_LABELS.overdue },
-  { value: "soon", label: FOLLOW_UP_LABELS.soon },
-  { value: "later", label: FOLLOW_UP_LABELS.later },
-  { value: "contacted", label: FOLLOW_UP_LABELS.contacted },
-  { value: "untouched", label: FOLLOW_UP_LABELS.untouched },
-];
+const STAGE_FILTERS: DealStage[] = ["all", "closed", "in_progress"];
 
 function formatDate(value: string | null) {
   if (!value) return "—";
@@ -27,7 +20,8 @@ function formatMoney(value: number | null) {
 export default function LeadsTable() {
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | FollowUpUrgency>("all");
+  const [stage, setStage] = useState<DealStage>("all");
+  const [owner, setOwner] = useState<"all" | (typeof TEAM_MEMBERS)[number]>("all");
   const [search, setSearch] = useState("");
   const [editingEvent, setEditingEvent] = useState<EventRecord | null>(null);
   const [showNew, setShowNew] = useState(false);
@@ -49,7 +43,8 @@ export default function LeadsTable() {
 
   const filtered = useMemo(() => {
     return events
-      .filter((ev) => (filter === "all" ? true : getFollowUpUrgency(ev) === filter))
+      .filter((ev) => (stage === "all" ? true : getDealStage(ev.status) === stage))
+      .filter((ev) => (owner === "all" ? true : ev.closedBy === owner || ev.contactedBy === owner))
       .filter((ev) => {
         if (!search.trim()) return true;
         const q = search.trim().toLowerCase();
@@ -60,35 +55,37 @@ export default function LeadsTable() {
           ev.eventType?.toLowerCase().includes(q)
         );
       });
-  }, [events, filter, search]);
-
-  const counts = useMemo(() => {
-    const map = new Map<FollowUpUrgency, number>();
-    for (const ev of events) {
-      const u = getFollowUpUrgency(ev);
-      map.set(u, (map.get(u) ?? 0) + 1);
-    }
-    return map;
-  }, [events]);
+  }, [events, stage, owner, search]);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-2">
-          {FILTERS.map((f) => (
+        <div className="flex flex-wrap items-center gap-2">
+          {STAGE_FILTERS.map((s) => (
             <button
-              key={f.value}
-              onClick={() => setFilter(f.value)}
+              key={s}
+              onClick={() => setStage(s)}
               className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition ${
-                filter === f.value
+                stage === s
                   ? "border-champagne bg-champagne/10 text-champagne"
                   : "border-charcoal-line text-paper-dim hover:text-paper"
               }`}
             >
-              {f.label}
-              {f.value !== "all" && counts.get(f.value) ? ` (${counts.get(f.value)})` : ""}
+              {DEAL_STAGE_LABELS[s]}
             </button>
           ))}
+          <select
+            value={owner}
+            onChange={(e) => setOwner(e.target.value as typeof owner)}
+            className="rounded-full border border-charcoal-line bg-ink px-3.5 py-1.5 text-xs font-medium text-paper-dim outline-none focus:border-champagne"
+          >
+            <option value="all">כולם</option>
+            {TEAM_MEMBERS.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex gap-2">
           <input
@@ -130,41 +127,34 @@ export default function LeadsTable() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((ev) => {
-                const urgency = getFollowUpUrgency(ev);
-                return (
-                  <tr
-                    key={ev.id}
-                    onClick={() => setEditingEvent(ev)}
-                    className="cursor-pointer border-b border-charcoal-line bg-ink-soft transition last:border-0 hover:bg-charcoal"
-                  >
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-paper">{ev.customer?.fullName ?? "—"}</p>
-                      <p className="text-xs text-paper-dim" dir="ltr">
-                        {ev.customer?.phone}
-                      </p>
-                    </td>
-                    <td className="px-4 py-3 text-paper-dim">{ev.eventType ?? "—"}</td>
-                    <td className="px-4 py-3 text-paper-dim">{formatDate(ev.eventDate)}</td>
-                    <td className="px-4 py-3">
-                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${EVENT_STATUS_COLORS[ev.status]}`}>
-                        {EVENT_STATUS_LABELS[ev.status]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-paper">{formatMoney(ev.price)}</td>
-                    <td className="px-4 py-3 text-paper-dim">
-                      {ev.closingProbability !== null ? `${ev.closingProbability}%` : "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${FOLLOW_UP_COLORS[urgency]}`}>
-                        {ev.nextFollowUpDate ? formatDate(ev.nextFollowUpDate) : FOLLOW_UP_LABELS[urgency]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-paper-dim">{ev.contactedBy ?? "—"}</td>
-                    <td className="max-w-[220px] truncate px-4 py-3 text-paper-dim">{ev.callNotes ?? "—"}</td>
-                  </tr>
-                );
-              })}
+              {filtered.map((ev) => (
+                <tr
+                  key={ev.id}
+                  onClick={() => setEditingEvent(ev)}
+                  className="cursor-pointer border-b border-charcoal-line bg-ink-soft transition last:border-0 hover:bg-charcoal"
+                >
+                  <td className="px-4 py-3">
+                    <p className="font-medium text-paper">{ev.customer?.fullName ?? "—"}</p>
+                    <p className="text-xs text-paper-dim" dir="ltr">
+                      {ev.customer?.phone}
+                    </p>
+                  </td>
+                  <td className="px-4 py-3 text-paper-dim">{ev.eventType ?? "—"}</td>
+                  <td className="px-4 py-3 text-paper-dim">{formatDate(ev.eventDate)}</td>
+                  <td className="px-4 py-3">
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${EVENT_STATUS_COLORS[ev.status]}`}>
+                      {EVENT_STATUS_LABELS[ev.status]}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-paper">{formatMoney(ev.price)}</td>
+                  <td className="px-4 py-3 text-paper-dim">
+                    {ev.closingProbability !== null ? `${ev.closingProbability}%` : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-paper-dim">{formatDate(ev.nextFollowUpDate)}</td>
+                  <td className="px-4 py-3 text-paper-dim">{ev.contactedBy ?? "—"}</td>
+                  <td className="max-w-[220px] truncate px-4 py-3 text-paper-dim">{ev.callNotes ?? "—"}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
